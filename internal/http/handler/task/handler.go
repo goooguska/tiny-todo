@@ -38,17 +38,41 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]bool{
+		"success": true,
+	})
+}
+
+func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.s.DeleteTask(id); err != nil {
+		http.Error(w, "failed delete task", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{
+		"success": true,
+	})
 }
 
 func (h *Handler) GetById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
 	}
 
 	task, err := h.s.GetById(id)
 	if err != nil {
 		http.Error(w, "task not found", http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -60,6 +84,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.s.GetAll()
 	if err != nil {
 		http.Error(w, "tasks not found", http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -45,6 +45,7 @@ func setupRoutes(s *service.Service) http.Handler {
 	mux.HandleFunc("GET /api/v1/tasks", h.GetAll)
 	mux.HandleFunc("GET /api/v1/tasks/{id}", h.GetById)
 	mux.HandleFunc("POST /api/v1/tasks", h.CreateTask)
+	mux.HandleFunc("DELETE /api/v1/tasks/{id}", h.DeleteTask)
 
 	return mux
 }
