@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strconv"
 	"tiny-todo/internal/dto/task"
-	service "tiny-todo/internal/service/task"
+	"tiny-todo/internal/service"
 
 	"github.com/go-playground/validator/v10"
 )
 
 type Handler struct {
-	s *service.Service
+	s service.TaskService
 	v *validator.Validate
 }
 
@@ -126,6 +126,6 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
-func NewHandler(s *service.Service, v *validator.Validate) *Handler {
+func NewHandler(s service.TaskService, v *validator.Validate) *Handler {
 	return &Handler{s: s, v: v}
 }

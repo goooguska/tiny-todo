@@ -26,10 +26,12 @@ func main() {
 	}
 	defer db.Close()
 
-	a := app.New(db, cfg)
+	a := app.Bootstrap(db, cfg)
 
-	a.Logger.Info("starting server", "addr", a.Server.Addr)
-	if err := a.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	server := a.HttpServer()
+
+	a.Logger.Info("starting server", "addr", server.Addr)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		a.Logger.Error("start server failed", "error", err)
 	}
 }
