@@ -4,15 +4,21 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"tiny-todo/internal/app"
+	"tiny-todo/internal/config"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	cfg, err := config.New("config/config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
 	db, err := setupDB()
 	if err != nil {
 		slog.Error("setup db failed", "error", err)
@@ -20,7 +26,7 @@ func main() {
 	}
 	defer db.Close()
 
-	a := app.New(db)
+	a := app.New(db, cfg)
 
 	a.Logger.Info("starting server", "addr", a.Server.Addr)
 	if err := a.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

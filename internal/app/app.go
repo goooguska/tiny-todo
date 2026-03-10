@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
+	"tiny-todo/internal/config"
 	"tiny-todo/internal/http/handler/task"
 	repo "tiny-todo/internal/repository/sqlite/task"
 	service "tiny-todo/internal/service/task"
@@ -13,22 +15,24 @@ import (
 )
 
 type App struct {
+	Cfg    *config.Config
 	Server *http.Server
 	Logger *slog.Logger
 }
 
-func New(db *sql.DB) *App {
-	l := setupLogger()
+func New(db *sql.DB, cfg *config.Config) *App {
+	l := initLogger()
 	s := service.NewService(repo.NewRepository(db))
 	server := &http.Server{
-		Addr:    ":8080",
-		Handler: setupRoutes(s),
+		Addr:        cfg.Server.Port,
+		ReadTimeout: time.Duration(cfg.Server.Timeout) * time.Minute,
+		Handler:     setupRoutes(s),
 	}
 
 	return &App{Server: server, Logger: l}
 }
 
-func setupLogger() *slog.Logger {
+func initLogger() *slog.Logger {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
