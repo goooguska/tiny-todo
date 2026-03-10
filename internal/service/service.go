@@ -7,6 +7,7 @@ import (
 
 type TaskService interface {
 	CreateTask(input *task.CreateInput) error
+	UpdateTask(task *task.UpdateInput) error
 	DeleteTask(id int) error
 	GetById(id int) (*model.Task, error)
 	GetAll() ([]model.Task, error)

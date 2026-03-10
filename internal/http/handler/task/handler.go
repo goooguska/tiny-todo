@@ -43,6 +43,40 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	defer r.Body.Close()
+
+	var input task.UpdateInput
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err = h.v.Struct(&input)
+	if err != nil {
+		http.Error(w, "unprocessable request body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.s.UpdateTask(id, &input); err != nil {
+		http.Error(w, "failed update task", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{
+		"success": true,
+	})
+}
+
 func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
