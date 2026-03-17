@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"tiny-todo/internal/dto/task"
+	httpresponse "tiny-todo/internal/http"
 	"tiny-todo/internal/service"
 
 	"github.com/go-playground/validator/v10"
@@ -21,24 +22,22 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var input task.CreateInput
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidBody", "Invalid request body", nil)
 		return
 	}
 
 	err := h.v.Struct(&input)
 	if err != nil {
-		http.Error(w, "unprocessable request body", http.StatusUnprocessableEntity)
+		httpresponse.SendErrorResponse(w, http.StatusUnprocessableEntity, "unprocessableBody", "Unprocessable request body", nil)
 		return
 	}
 
 	if err := h.s.CreateTask(&input); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpresponse.FailedCreate(w)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]bool{
+	httpresponse.SendResponse(w, http.StatusOK, map[string]bool{
 		"success": true,
 	})
 }
@@ -46,7 +45,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidId", "Invalid Id", nil)
 		return
 	}
 
@@ -55,24 +54,22 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var input task.UpdateInput
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidBody", "Invalid request body", nil)
 		return
 	}
 
 	err = h.v.Struct(&input)
 	if err != nil {
-		http.Error(w, "unprocessable request body", http.StatusUnprocessableEntity)
+		httpresponse.SendErrorResponse(w, http.StatusUnprocessableEntity, "unprocessableBody", "Unprocessable request body", nil)
 		return
 	}
 
 	if err := h.s.UpdateTask(id, &input); err != nil {
-		http.Error(w, "failed update task", http.StatusBadRequest)
+		httpresponse.FailedUpdate(w)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]bool{
+	httpresponse.SendResponse(w, http.StatusOK, map[string]bool{
 		"success": true,
 	})
 }
@@ -80,18 +77,16 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidId", "Invalid Id", nil)
 		return
 	}
 
 	if err := h.s.DeleteTask(id); err != nil {
-		http.Error(w, "failed delete task", http.StatusBadRequest)
+		httpresponse.FailedDelete(w)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]bool{
+	httpresponse.SendResponse(w, http.StatusOK, map[string]bool{
 		"success": true,
 	})
 }
@@ -99,31 +94,28 @@ func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidId", "Invalid Id", nil)
 		return
 	}
 
 	task, err := h.s.GetById(id)
 	if err != nil {
-		http.Error(w, "task not found", http.StatusNotFound)
+		httpresponse.NotFound(w)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(task)
+	httpresponse.SendResponse(w, http.StatusOK, task)
 }
 
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
+	//TODO: поправить и переделать на пагинацию
 	tasks, err := h.s.GetAll()
 	if err != nil {
 		http.Error(w, "tasks not found", http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(tasks)
+	httpresponse.SendResponse(w, http.StatusOK, tasks)
 }
 
 func NewHandler(s service.TaskService, v *validator.Validate) *Handler {
