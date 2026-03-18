@@ -14,7 +14,7 @@ func (r *repository) CreateTask(input *task.CreateInput) error {
 	}
 	query := fmt.Sprintf("INSERT INTO %s (id, title, description) VALUES ($1, $2, $3) RETURNING id", TableName)
 
-	_, err = r.db.Exec(query, newId.String(), input.Title, input.Description)
+	_, err = r.db.DB.Exec(query, newId.String(), input.Title, input.Description)
 	if err != nil {
 		return fmt.Errorf("create task: %w", err)
 	}

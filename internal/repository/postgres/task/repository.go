@@ -1,13 +1,15 @@
 package task
 
-import "database/sql"
+import (
+	"tiny-todo/internal/storage"
+)
 
 const TableName = "tasks"
 
 type repository struct {
-	db *sql.DB
+	db *storage.Postgres
 }
 
-func NewRepository(db *sql.DB) *repository {
+func NewRepository(db *storage.Postgres) *repository {
 	return &repository{db: db}
 }

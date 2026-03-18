@@ -9,6 +9,10 @@ import (
 
 const dsn = "user=%s password=%s host=%s port=%s dbname=%s sslmode=%s"
 
+type Postgres struct {
+	DB *sql.DB
+}
+
 type PostgresConfig interface {
 	GetHost() string
 	GetPort() string
@@ -18,26 +22,17 @@ type PostgresConfig interface {
 	GetSslMode() string
 }
 
-func New(cfg PostgresConfig) (*sql.DB, error) {
+func New(cfg PostgresConfig) (*Postgres, error) {
 	dsnStr := fmt.Sprintf(dsn, cfg.GetUser(), cfg.GetPassword(), cfg.GetHost(), cfg.GetPort(), cfg.GetName(), cfg.GetSslMode())
 
 	db, err := connect(dsnStr)
 	if err != nil {
-		return nil, err
+		return &Postgres{}, err
 	}
 
-	return db, nil
+	return &Postgres{DB: db}, nil
 }
 
 func connect(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("connect db failed: %w", err)
-	}
-
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("ping db failed: %w", err)
-	}
-
-	return db, nil
+	return sql.Open("pgx", dsn)
 }

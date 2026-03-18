@@ -31,7 +31,7 @@ func (r *repository) UpdateTask(id string, input *task.UpdateInput) error {
 	args = append(args, id)
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE id=$%d", TableName, strings.Join(setParts, ","), len(args))
 
-	result, err := r.db.Exec(query, args...)
+	result, err := r.db.DB.Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("update task: %w", err)
 	}
