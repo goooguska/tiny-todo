@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 
-func (r *repository) DeleteTask(id int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", TableName)
+func (r *repository) DeleteTask(id string) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", TableName)
 	result, err := r.db.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("failed delete task %w", err)
@@ -17,7 +17,7 @@ func (r *repository) DeleteTask(id int) error {
 	}
 
 	if rows == 0 {
-		return fmt.Errorf("failed delete task with id %d", id)
+		return fmt.Errorf("failed delete task with id %s", id)
 	}
 
 	return nil

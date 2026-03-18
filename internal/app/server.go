@@ -19,7 +19,7 @@ func (a *App) HttpServer() *http.Server {
 func (a *App) initRoutes() http.Handler {
 	mux := http.NewServeMux()
 	v := validator.New()
-	h := task.NewHandler(a.Services.TaskService, v)
+	h := task.NewHandler(a.Services.TaskService, v, a.Logger)
 
 	mux.HandleFunc("GET /api/v1/tasks", h.GetAll)
 	mux.HandleFunc("GET /api/v1/tasks/{id}", h.GetById)

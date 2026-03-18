@@ -1,16 +1,17 @@
 package app
 
 import (
+	"database/sql"
 	"tiny-todo/internal/repository"
-	repo "tiny-todo/internal/repository/sqlite/task"
+	repo "tiny-todo/internal/repository/postgres/task"
 )
 
 type Repositories struct {
 	TaskRepository repository.TaskRepository
 }
 
-func NewRepositories(a *App) *Repositories {
+func NewRepositories(db *sql.DB) *Repositories {
 	return &Repositories{
-		TaskRepository: repo.NewRepository(a.DB),
+		TaskRepository: repo.NewRepository(db),
 	}
 }

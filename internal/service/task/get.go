@@ -11,7 +11,7 @@ func (s *Service) GetAll() ([]model.Task, error) {
 	return tasks, nil
 }
 
-func (s *Service) GetById(id int) (*model.Task, error) {
+func (s *Service) GetById(id string) (*model.Task, error) {
 	task, err := s.r.GetById(id)
 	if err != nil {
 		return nil, err
