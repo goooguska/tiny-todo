@@ -12,7 +12,7 @@ func (r *repository) GetAll() ([]model.Task, error) {
 		"SELECT id, title, description, completed FROM %s",
 		TableName,
 	)
-	rows, err := r.db.Query(query)
+	rows, err := r.db.DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("get tasks query: %w", err)
 	}
@@ -50,7 +50,7 @@ func (r *repository) GetById(id string) (*model.Task, error) {
 
 	var task model.Task
 
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.DB.QueryRow(query, id).Scan(
 		&task.Id,
 		&task.Title,
 		&task.Description,

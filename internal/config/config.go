@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -49,12 +49,12 @@ func (d *DB) GetSslMode() string {
 	return d.SslMode
 }
 
-func New(path string) (*Config, error) {
+func New(path string) *Config {
 	var cfg Config
 
 	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
-		return nil, fmt.Errorf("read config: %w", err)
+		log.Panicf("Initialization config error. Error:%s", err.Error())
 	}
 
-	return &cfg, nil
+	return &cfg
 }

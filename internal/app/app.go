@@ -1,46 +1,50 @@
 package app
 
 import (
-	"database/sql"
-	"fmt"
-	"log/slog"
-	"os"
-	"tiny-todo/internal/config"
-	"tiny-todo/internal/storage"
+	"errors"
+	"net/http"
+	"time"
+	"tiny-todo/internal/http/router"
 )
 
 type App struct {
-	Config *config.Config
-	Logger *slog.Logger
-	DB     *sql.DB
-
-	Repositories *Repositories
-	Services     *Services
+	diContainer *diContainer
+	httpServer  *http.Server
 }
 
-func Bootstrap(config *config.Config) *App {
-	logger := initLogger()
+func New() *App {
+	a := &App{}
 
-	db, err := storage.New(&config.DB)
-	if err != nil {
-		panic(fmt.Sprintf("postgres init failed: %v\n", err))
-	}
+	a.Bootstrap()
 
-	app := &App{
-		DB:     db,
-		Logger: logger,
-		Config: config,
-	}
-
-	app.Repositories = NewRepositories(db)
-	app.Services = NewServices(app)
-
-	return app
+	return a
 }
 
-func initLogger() *slog.Logger {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+func (a *App) Run() {
+	defer a.diContainer.Db().DB.Close()
+	a.diContainer.Logger().Info("starting server", "addr", a.diContainer.Config().Server.Port)
+	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		a.diContainer.Logger().Error("start server failed", "error", err)
+	}
+}
 
-	return logger
+func (a *App) Bootstrap() *App {
+	a.initDI()
+	a.initHttpServer()
+
+	return a
+}
+
+func (a *App) initDI() {
+	a.diContainer = NewDiContainer()
+}
+
+func (a *App) initHttpServer() {
+	r := router.NewRouter(a.diContainer.ApiHandlers())
+
+	a.httpServer = &http.Server{
+		Addr:        ":" + a.diContainer.Config().Server.Port,
+		ReadTimeout: time.Duration(a.diContainer.Config().Server.Timeout) * time.Minute,
+		Handler:     r,
+	}
 }

@@ -6,7 +6,7 @@ import (
 
 func (r *repository) DeleteTask(id string) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", TableName)
-	result, err := r.db.Exec(query, id)
+	result, err := r.db.DB.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("failed delete task %w", err)
 	}
