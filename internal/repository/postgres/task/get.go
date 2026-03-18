@@ -42,9 +42,9 @@ func (r *repository) GetAll() ([]model.Task, error) {
 	return tasks, nil
 }
 
-func (r *repository) GetById(id int) (*model.Task, error) {
+func (r *repository) GetById(id string) (*model.Task, error) {
 	query := fmt.Sprintf(
-		"SELECT id, title, description, completed FROM %s WHERE id = ?",
+		"SELECT * FROM %s WHERE id = $1",
 		TableName,
 	)
 
@@ -59,7 +59,7 @@ func (r *repository) GetById(id int) (*model.Task, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("task with id %d not found", id)
+			return nil, fmt.Errorf("task with id %s not found", id)
 		}
 		return nil, fmt.Errorf("get task by id: %w", err)
 	}

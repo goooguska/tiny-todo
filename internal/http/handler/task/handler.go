@@ -2,18 +2,20 @@ package task
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
-	"strconv"
 	"tiny-todo/internal/dto/task"
 	httpresponse "tiny-todo/internal/http"
 	"tiny-todo/internal/service"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
 	s service.TaskService
 	v *validator.Validate
+	l *slog.Logger
 }
 
 func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
@@ -33,6 +35,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.s.CreateTask(&input); err != nil {
+		h.l.Error(err.Error(), "error", err)
 		httpresponse.FailedCreate(w)
 		return
 	}
@@ -43,7 +46,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidId", "Invalid Id", nil)
 		return
@@ -64,7 +67,8 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.s.UpdateTask(id, &input); err != nil {
+	if err := h.s.UpdateTask(id.String(), &input); err != nil {
+		h.l.Error(err.Error(), "error", err)
 		httpresponse.FailedUpdate(w)
 		return
 	}
@@ -75,13 +79,14 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidId", "Invalid Id", nil)
 		return
 	}
 
-	if err := h.s.DeleteTask(id); err != nil {
+	if err := h.s.DeleteTask(id.String()); err != nil {
+		h.l.Error(err.Error(), "error", err)
 		httpresponse.FailedDelete(w)
 		return
 	}
@@ -92,14 +97,15 @@ func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		httpresponse.SendErrorResponse(w, http.StatusBadRequest, "invalidId", "Invalid Id", nil)
 		return
 	}
 
-	task, err := h.s.GetById(id)
+	task, err := h.s.GetById(id.String())
 	if err != nil {
+		h.l.Error(err.Error(), "error", err)
 		httpresponse.NotFound(w)
 		return
 	}
@@ -118,6 +124,6 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	httpresponse.SendResponse(w, http.StatusOK, tasks)
 }
 
-func NewHandler(s service.TaskService, v *validator.Validate) *Handler {
-	return &Handler{s: s, v: v}
+func NewHandler(s service.TaskService, v *validator.Validate, l *slog.Logger) *Handler {
+	return &Handler{s: s, v: v, l: l}
 }

@@ -2,9 +2,11 @@ package app
 
 import (
 	"database/sql"
+	"fmt"
 	"log/slog"
 	"os"
 	"tiny-todo/internal/config"
+	"tiny-todo/internal/storage"
 )
 
 type App struct {
@@ -16,14 +18,21 @@ type App struct {
 	Services     *Services
 }
 
-func Bootstrap(db *sql.DB, config *config.Config) *App {
+func Bootstrap(config *config.Config) *App {
+	logger := initLogger()
+
+	db, err := storage.New(&config.DB)
+	if err != nil {
+		panic(fmt.Sprintf("postgres init failed: %v\n", err))
+	}
+
 	app := &App{
 		DB:     db,
-		Logger: initLogger(),
+		Logger: logger,
 		Config: config,
 	}
 
-	app.Repositories = NewRepositories(app)
+	app.Repositories = NewRepositories(db)
 	app.Services = NewServices(app)
 
 	return app
